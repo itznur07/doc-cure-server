@@ -2,37 +2,47 @@ const express = require("express");
 const app = express();
 const port = process.env.PORT || 3000;
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
 require("dotenv").config();
+const mongoose = require("mongoose");
 
 /** Middlewares */
 app.use(cors());
 app.use(express.json());
 
-/** Mongodb Database Systems */
+/** Connect to MongoDB */
+mongoose
+  .connect(
+    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@todos.ukwfq5e.mongodb.net/DocCure?retryWrites=true&w=majority`,
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  )
+  .then(() => {
+    console.log("Connected to MongoDB");
+  })
+  .catch((err) => {
+    console.error("Error connecting to MongoDB:", err);
+  });
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@todos.ukwfq5e.mongodb.net/?retryWrites=true&w=majority`;
+/** Schema Valication */
+// const serviceSchema = new mongoose.Schema({
+//   name: {
+//     type: String,
+//     required: true,
+//   },
+// });
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
+
+/** Mongoose Models */
+const services = mongoose.model("services", new mongoose.Schema({}))
+
+/** API Routes */
+app.get("/services", async (req, res) => {
+  const result = await services.find();
+  res.send(result);
 });
 
-async function run() {
-  try {
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
-  } finally {
-  }
-}
-run().catch(console.dir);
-
+/** Basic Server Creations */
 app.get("/", (req, res) => res.send("Hello World!"));
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
